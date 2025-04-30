@@ -1,0 +1,31 @@
+import json
+import urllib.request
+
+def lambda_handler(event, context):
+    body = json.loads(event['body'])
+    user_message = body['messages'][-1]['content']
+
+    # 👇 ここにあなたのColabで表示されたURLを入れてください（最後に /chat を忘れずに）
+    api_url = "https://9300-34-173-41-80.ngrok-free.app/chat"
+
+    data = json.dumps({"message": user_message}).encode('utf-8')
+    req = urllib.request.Request(api_url, data=data, headers={'Content-Type': 'application/json'})
+
+    try:
+        with urllib.request.urlopen(req) as res:
+            response_data = json.loads(res.read())
+            reply = response_data.get("reply", "No reply")
+    except Exception as e:
+        reply = f"API error: {e}"
+
+    return {
+        'statusCode': 200,
+        'body': json.dumps({
+            'choices': [{
+                'message': {
+                    'role': 'assistant',
+                    'content': reply
+                }
+            }]
+        }),
+    }
